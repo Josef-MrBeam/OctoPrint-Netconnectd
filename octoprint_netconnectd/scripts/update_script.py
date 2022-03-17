@@ -448,10 +448,6 @@ def loadPluginTarget(archive, folder):
         )
     except IOError:
         raise RuntimeError("Could not copy update_script to working directory")
-    shutil.copy2(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "update_script.py"),
-        os.path.join(folder, "update_script.py"),
-    )  # todo only for debug
 
     # get target version
     exec(
