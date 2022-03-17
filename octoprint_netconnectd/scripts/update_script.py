@@ -127,7 +127,7 @@ def get_dependencies(path):
         list of dependencie dict [{"name", "version"}]
     """
     dependencies_path = os.path.join(path, "dependencies.txt")
-    dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)(.=)+([0-9]+.[0-9]+.[0-9]+)"
+    dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)(.=)+((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)"
     try:
         with open(dependencies_path, "r") as f:
             dependencies_content = f.read()
@@ -414,7 +414,9 @@ def loadPluginTarget(archive, folder):
     plugin_extracted_path = os.path.join(folder, UPDATE_CONFIG_NAME)
     plugin_extracted_path_folder = os.path.join(
         plugin_extracted_path,
-        "{repo_name}-{target}".format(repo_name=REPO_NAME, target=filename.split(".zip")[0]),
+        "{repo_name}-{target}".format(
+            repo_name=REPO_NAME, target=filename.split(".zip")[0]
+        ),
     )
     try:
         plugin_zipfile = zipfile.ZipFile(BytesIO(req.content))
@@ -491,7 +493,9 @@ def main():
 
         update_info = get_update_info()
         archive, target_version = loadPluginTarget(
-            update_info.get(UPDATE_CONFIG_NAME).get("pip").format(target_version=args.target),
+            update_info.get(UPDATE_CONFIG_NAME)
+            .get("pip")
+            .format(target_version=args.target),
             folder,
         )
 
@@ -503,8 +507,7 @@ def main():
         ] + sys.argv[1:]
         try:
             result = subprocess.call(
-                [sys.executable, os.path.join(folder, "update_script.py")]
-                + sys.argv,
+                [sys.executable, os.path.join(folder, "update_script.py")] + sys.argv,
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
@@ -513,10 +516,6 @@ def main():
 
         if result != 0:
             raise exceptions.UpdateError("Error Could not update", result)
-
-        raise exceptions.UpdateError(
-            "Error Could not update", result
-        )  # TODO only for debug
 
 
 if __name__ == "__main__":

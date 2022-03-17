@@ -1,1 +1,1 @@
-__version__ = "TODO"
+__version__ = "0.1.10" #TODO fix with versioneer
