@@ -1,1 +1,1 @@
-octoprint_netconnectd/__version.py export-subst
+octoprint_netconnectd/_version.py export-subst

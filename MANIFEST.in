@@ -5,4 +5,4 @@ include LICENSE
 include requirements.txt
 include README.md
 include versioneer.py
-include octoprint_netconnectd/__version.py
+include octoprint_netconnectd/_version.py

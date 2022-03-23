@@ -40,10 +40,10 @@ def get_config():
     # _version.py
     cfg = VersioneerConfig()
     cfg.VCS = "git"
-    cfg.style = "pep440-tag"
+    cfg.style = "pep440-post"
     cfg.tag_prefix = "v"
     cfg.parentdir_prefix = ""
-    cfg.versionfile_source = "octoprint_netconnectd/__version.py"
+    cfg.versionfile_source = "octoprint_netconnectd/_version.py"
     cfg.verbose = False
     return cfg
 
