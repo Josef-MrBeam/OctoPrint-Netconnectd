@@ -30,6 +30,7 @@ REPO_NAME = "OctoPrint-Netconnectd"
 MAIN_SRC_FOLDER_NAME = "octoprint_netconnectd"
 PLUGIN_NAME = "OctoPrint-Netconnectd"
 DEFAULT_OPRINT_VENV = "/home/pi/oprint/bin/pip"
+PIP_WHEEL_TEMP_FOLDER = "/tmp/wheelhouse"
 
 """
 copy pasta of mrbeam plugin update script
@@ -95,14 +96,6 @@ def _parse_arguments():
         dest="archive",
         default=None,
         help="Path of target zip file on local system",
-    )
-    parser.add_argument(
-        "--target_version",
-        action="store",
-        type=str,
-        dest="target_version",
-        default=None,
-        help="Version number of the target",
     )
     parser.add_argument(
         "folder",
@@ -175,13 +168,25 @@ def build_wheels(build_queue):
         None
 
     """
+    try:
+        if not os.path.isdir(PIP_WHEEL_TEMP_FOLDER):
+            os.mkdir(PIP_WHEEL_TEMP_FOLDER)
+    except OSError as e:
+        raise RuntimeError("can't create wheel tmp folder {} - {}".format(PIP_WHEEL_TEMP_FOLDER, e))
+
     for venv, packages in build_queue.items():
+        tmp_folder = os.path.join(PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
+        if os.path.isdir(tmp_folder):
+            try:
+                os.system("sudo rm -r {}".format(tmp_folder))
+            except Exception as e:
+                raise RuntimeError("can't delete pip wheel temp folder {} - {}".format(tmp_folder, e))
 
         pip_args = [
             "wheel",
             "--no-python-version-warning",
             "--disable-pip-version-check",
-            "--wheel-dir=/tmp/wheelhouse",  # Build wheels into <dir>, where the default is the current working directory.
+            "--wheel-dir={}".format(tmp_folder),  # Build wheels into <dir>, where the default is the current working directory.
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
@@ -213,20 +218,20 @@ def install_wheels(install_queue):
         raise RuntimeError("install queue is not a dict")
 
     for venv, packages in install_queue.items():
-
+        tmp_folder = os.path.join(PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
         pip_args = [
             "install",
             "--no-python-version-warning",
             "--disable-pip-version-check",
             "--upgrade",  # Upgrade all specified packages to the newest available version. The handling of dependencies depends on the upgrade-strategy used.
             "--no-index",  # Ignore package index (only looking at --find-links URLs instead).
-            "--find-links=/tmp/wheelhouse",  # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
+            "--find-links={}".format(tmp_folder),  # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
             pip_args.append(
-                "{package}=={package_version}".format(
-                    package=package["name"], package_version=package["target"]
+                "{package}".format(
+                    package=package["name"]
                 )
             )
 
@@ -239,14 +244,14 @@ def install_wheels(install_queue):
             )
 
 
-def build_queue(update_info, dependencies, target, plugin_archive):
+def build_queue(update_info, dependencies, plugin_archive):
     """
     build the queue of packages to install
 
     Args:
         update_info: a dict of informations how to update the packages
         dependencies: a list dicts of dependencies [{"name", "version"}]
-        target: target of the Mr Beam Plugin to update to
+        plugin_archive: path to archive of the plugin
 
     Returns:
         install_queue: dict of venvs with a list of package dicts {"<venv path>": [{"name", "archive", "target"}]
@@ -259,7 +264,7 @@ def build_queue(update_info, dependencies, target, plugin_archive):
         {
             "name": PLUGIN_NAME,
             "archive": plugin_archive,
-            "target": target,
+            "target": '',
         }
     )
     print("dependencies - {}".format(dependencies))
@@ -322,7 +327,7 @@ def run_update():
     update_info = get_update_info()
 
     install_queue = build_queue(
-        update_info, dependencies, args.target_version, args.archive
+        update_info, dependencies, args.archive
     )
 
     print("install_queue", install_queue)
@@ -367,7 +372,7 @@ def loadPluginTarget(archive, folder):
         folder: working directory
 
     Returns:
-        (zip_file_path, target_version) - path of the downloaded zip file and target version string
+        zip_file_path - path of the downloaded zip file
     """
 
     # download target repo zip
@@ -421,17 +426,7 @@ def loadPluginTarget(archive, folder):
     except IOError:
         raise RuntimeError("Could not copy update_script to working directory")
 
-    # get target version
-    exec(
-        open(
-            os.path.join(
-                plugin_extracted_path_folder, MAIN_SRC_FOLDER_NAME, "__version.py"
-            )
-        ).read()
-    )
-    target_version = __version__
-
-    return zip_file_path, target_version
+    return zip_file_path
 
 
 def main():
@@ -445,9 +440,9 @@ def main():
 
     args = _parse_arguments()
     if args.call:
-        if args.archive is None or args.target_version is None:
+        if args.archive is None:
             raise RuntimeError(
-                "Could not run update archive or target_version is missing"
+                "Could not run update archive is missing"
             )
         run_update()
     else:
@@ -460,7 +455,7 @@ def main():
             raise RuntimeError("Could not update, base folder is not writable")
 
         update_info = get_update_info()
-        archive, target_version = loadPluginTarget(
+        archive = loadPluginTarget(
             update_info.get(UPDATE_CONFIG_NAME)
             .get("pip")
             .format(target_version=args.target),
@@ -470,8 +465,7 @@ def main():
         # call new update script with args
         sys.argv = [
             "--call=true",
-            "--archive={}".format(archive),
-            "--target_version={}".format(target_version),
+            "--archive={}".format(archive)
         ] + sys.argv[1:]
         try:
             result = subprocess.call(
