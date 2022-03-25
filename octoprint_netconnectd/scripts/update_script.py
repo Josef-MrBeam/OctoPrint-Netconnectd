@@ -392,7 +392,11 @@ def loadPluginTarget(archive, folder):
     plugin_extracted_path_folder = os.path.join(
         plugin_extracted_path,
         "{repo_name}-{target}".format(
+<<<<<<< HEAD
             repo_name=REPO_NAME, target=re.sub(r"^v", "", filename.split(".zip")[0])
+=======
+            repo_name=REPO_NAME, target=filename.split(".zip")[0]
+>>>>>>> 810f55e (SW-650 create update script for netconnectd plugin (#2))
         ),
     )
     try:
