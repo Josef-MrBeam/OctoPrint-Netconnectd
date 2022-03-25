@@ -25,7 +25,7 @@ from urllib3.exceptions import MaxRetryError, ConnectionError
 
 _logger = logging.getLogger("octoprint.plugins.netconnectd.softwareupdate.updatescript")
 
-UPDATE_CONFIG_NAME = "netconnectd_plugin"
+UPDATE_CONFIG_NAME = "netconnectd"
 REPO_NAME = "OctoPrint-Netconnectd"
 MAIN_SRC_FOLDER_NAME = "octoprint_netconnectd"
 PLUGIN_NAME = "OctoPrint-Netconnectd"
