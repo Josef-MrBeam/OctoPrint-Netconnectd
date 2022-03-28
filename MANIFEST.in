@@ -6,3 +6,4 @@ include requirements.txt
 include README.md
 include versioneer.py
 include octoprint_netconnectd/_version.py
+graft octoprint_netconnectd/scripts
