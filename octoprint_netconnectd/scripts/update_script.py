@@ -16,8 +16,8 @@ from io import BytesIO
 from octoprint.plugins.softwareupdate import exceptions
 from octoprint.settings import _default_basedir
 
-from octoprint_mrbeam.util.pip_util import get_version_of_pip_module, \
-    get_pip_caller  # TODO check how to be independent of mrbeam plugin
+from octoprint_netconnectd.util.pip_util import get_version_of_pip_module, \
+    get_pip_caller
 
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
