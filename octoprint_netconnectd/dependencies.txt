@@ -1,1 +1,1 @@
-netconnectd==0.1.0
+netconnectd==0.1.1
