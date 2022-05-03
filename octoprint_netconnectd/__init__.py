@@ -374,3 +374,8 @@ def __plugin_load__():
     global __plugin_implementation__
     __plugin_implementation__ = NetconnectdSettingsPlugin()
     return True
+
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
