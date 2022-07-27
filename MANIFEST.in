@@ -4,3 +4,6 @@ recursive-include octoprint_netconnectd/translations *
 include LICENSE
 include requirements.txt
 include README.md
+include versioneer.py
+include octoprint_netconnectd/_version.py
+graft octoprint_netconnectd/scripts
